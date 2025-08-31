@@ -1,0 +1,3988 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Travel App API",
+        "description": "Documentación de la API Travel App",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Servidor local"
+        }
+    ],
+    "paths": {
+        "/api/alquileres": {
+            "get": {
+                "tags": [
+                    "Alquileres"
+                ],
+                "summary": "Listar todos los alquileres",
+                "description": "Obtiene la lista de todos los alquileres. Solo accesible para administradores y superadministradores",
+                "operationId": "918960e0454810868ab18a59ee603059",
+                "responses": {
+                    "200": {
+                        "description": "Lista de alquileres obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Alquiler"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado. Solo los administradores/superadministradores pueden ver todos los alquileres.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores/superadministradores pueden ver todos los alquileres"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Alquileres"
+                ],
+                "summary": "Crear un nuevo alquiler",
+                "description": "Solo accesible para usuarios registrados. Los clientes solo podrán crear el alquiler a su nombre, los admin/superadmin en cambio podrán crear un alquiler tanto a su nombre como a nombre de otro cliente",
+                "operationId": "78f532ce8578cc1a991307705756a365",
+                "requestBody": {
+                    "description": "Datos para crear un alquiler",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "coche_id",
+                                    "fecha_inicio",
+                                    "fecha_fin"
+                                ],
+                                "properties": {
+                                    "coche_id": {
+                                        "description": "ID del coche a alquilar",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "cliente_id": {
+                                        "description": "ID del cliente. Obligatorio para admin y superadmin. Omitir para usuarios normales",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "fecha_inicio": {
+                                        "description": "Fecha de inicio del alquiler",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-01"
+                                    },
+                                    "fecha_fin": {
+                                        "description": "Fecha de fin del alquiler, posterior a fecha_inicio",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-05"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Alquiler creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes permisos para alquilar en nombre de otro cliente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No tienes permisos para alquilar en nombre de otro cliente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Datos inválidos o cliente_id obligatorio para admin/superadmin",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El ID del cliente es obligatorio para los administradores y superadministradores"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "El coche no está disponible para alquilar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El coche no está disponible para alquilar."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/alquileres/{id}": {
+            "get": {
+                "tags": [
+                    "Alquileres"
+                ],
+                "summary": "Mostrar un alquiler específico (por id)",
+                "description": "Obtiene los detalles de un alquiler por su ID. Solo accesible para administradores, superadministradores o el cliente creador del alquiler.",
+                "operationId": "2f9c696d237ca4b7f13be87cf0233adf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del alquiler",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del alquiler",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador o el propio cliente puede ver un alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Alquiler no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alquiler no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Alquileres"
+                ],
+                "summary": "Actualizar un alquiler",
+                "description": "Permite modificar los datos de un alquiler (menos el id del cliente que ha hecho la reserva, ni el coste total del alquiler). Solo accesible para administradores, superadministradores o el cliente creador del alquiler.",
+                "operationId": "89596a094bdc9e82673d0a43def9e1f4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del alquiler a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "coche_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "fecha_inicio": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-01"
+                                    },
+                                    "fecha_fin": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-05"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Alquiler actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado. Solo el administrador o el cliente creador puede editar este alquiler.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador o el propio cliente puede editar un alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Alquiler no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alquiler no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Intento de modificar campos restringidos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No se permite modificar el ID del cliente que alquila el coche ni el ID del propio alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "El coche no está disponible para alquilar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El coche no está disponible para alquilar."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Alquileres"
+                ],
+                "summary": "Eliminar un alquiler",
+                "description": "Permite eliminar un alquiler. Solo accesible para administradores, superadministradores o el cliente creador del alquiler.",
+                "operationId": "3abefda76fa7ae4eadac008279dae31a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del alquiler a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Alquiler borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alquiler borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador o el propio cliente puede eliminar un alquiler"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Alquiler no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alquiler no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/carroceriaCoches": {
+            "get": {
+                "tags": [
+                    "Carrocerías de Coche"
+                ],
+                "summary": "Listar todas las carrocerías de coche",
+                "description": "Obtiene la lista de todas las carrocerías de coche disponibles. Solo accesible para usuarios registrados",
+                "operationId": "7bf67489fc9501de61583c4fa328c569",
+                "responses": {
+                    "200": {
+                        "description": "Listado de carrocerías de coche",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CarroceriaCoche"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Carrocerías de Coche"
+                ],
+                "summary": "Crear una nueva carrocería de coche",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir una nueva carrocería a la Base de Datos.",
+                "operationId": "4008778e1e661063a30ae7d9adcf0b3d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CarroceriaCocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Carrocería de coche creada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/CarroceriaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado. Solo administradores pueden crear carrocerías.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores pueden guardar una nueva carrocería"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "nombre": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Ya existe esa carrocería en nuestra BBDD'"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/carroceriaCoches/{id}": {
+            "get": {
+                "tags": [
+                    "Carrocerías de Coche"
+                ],
+                "summary": "Mostrar una carrocería de coche específica (por id)",
+                "description": "Obtiene los detalles de la carrocería de un coche por su ID. Solo accesible para usuarios registrados",
+                "operationId": "ab83cd6772a9e87b23f09f48cfaaee34",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrocería",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carrocería encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/CarroceriaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Carrocería no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrocería no encontrada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Carrocerías de Coche"
+                ],
+                "summary": "Actualizar una carrocería de coche",
+                "description": "Permite modificar los datos de la carrocería de un coche. Solo accesible para administradores y superadministradores.",
+                "operationId": "1d44de6dbf5c60a791153e1c3e0feedb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrocería a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CarroceriaCocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Carrocería actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/CarroceriaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Sin permisos para actualizar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede editar una carrocería"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Carrocería no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrocería no encontrada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El campo nombre es obligatorio."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Carrocerías de Coche"
+                ],
+                "summary": "Borrar una carrocería de coche",
+                "description": "Permite eliminar una carrocería de coche. Solo accesible para administradores y superadministradores.",
+                "operationId": "b26c48ceed21617556298a2b05abc6c4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrocería a borrar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carrocería borrada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrocería borrada correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Sin permisos para borrar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar una carrocería"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Carrocería no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrocería no encontrada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/coches": {
+            "get": {
+                "tags": [
+                    "Coches"
+                ],
+                "summary": "Listar todos los coches",
+                "description": "Obtiene la lista de todos los coches disponibles. Solo accesible para usuarios registrados.",
+                "operationId": "b1e90e29a536ed66eac03a39491e64d6",
+                "responses": {
+                    "200": {
+                        "description": "Lista de coches con datos completos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Coche"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Coches"
+                ],
+                "summary": "Crear un nuevo coche",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir un nuevo coche a la Base de Datos.",
+                "operationId": "62880a1a000b32885ce0ce670b72bc02",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Coche creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Coche"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/coches/{id}": {
+            "get": {
+                "tags": [
+                    "Coches"
+                ],
+                "summary": "Mostrar un coche específico (por id)",
+                "description": "Obtiene los detalles de un coche por su ID. Solo accesible para usuarios registrados",
+                "operationId": "541af9a1231301727663139082a1416a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del coche a mostrar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del coche",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Coche"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Coche no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Coches"
+                ],
+                "summary": "Actualizar un coche",
+                "description": "Permite modificar los datos de un coche. Solo accesible para administradores y superadministradores.",
+                "operationId": "114d4028a8731e5dfbee06fc7db12cbd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del coche a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Coche actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Coche"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Solo el administrador puede editar un coche"
+                    },
+                    "404": {
+                        "description": "Coche no encontrado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Coches"
+                ],
+                "summary": "Borrar un coche",
+                "description": "Permite eliminar un coche. Solo accesible para administradores y superadministradores.",
+                "operationId": "7bfc973652cac23084184088d575ea24",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del coche a borrar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coche borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Coche borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Solo el administrador puede borrar un coche",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar un coche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Coche no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Coche no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/idiomas": {
+            "get": {
+                "tags": [
+                    "Idiomas"
+                ],
+                "summary": "Listar todos los idiomas",
+                "description": "Obtiene la lista de todos los idiomas disponibles. Solo accesible para usuarios registrados.",
+                "operationId": "70f14e34300a95dca5745cf7c529a94d",
+                "responses": {
+                    "200": {
+                        "description": "Lista de idiomas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Idioma"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Idiomas"
+                ],
+                "summary": "Crear un nuevo idioma",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir un nuevo idioma a la Base de Datos.",
+                "operationId": "74e627db87abee90704ccee648b8b163",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IdiomaDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Idioma creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores pueden guardar un nuevo idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/idiomas/{id}": {
+            "get": {
+                "tags": [
+                    "Idiomas"
+                ],
+                "summary": "Mostrar un idioma específico (por id)",
+                "description": "Devuelve un idioma específico por su ID.",
+                "operationId": "df819a81cb45d3f299d96f262f3fb3ee",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del idioma a obtener",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Idioma encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Idioma no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Idioma no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Idiomas"
+                ],
+                "summary": "Actualizar un idioma",
+                "description": "Permite modificar los datos de un idioma. Solo accesible para administradores y superadministradores.",
+                "operationId": "fb0c6c6e714c9d957933d31d324377f8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del idioma a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IdiomaDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Idioma actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede editar un idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Idioma no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Idioma no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ya existe un idioma con ese nombre en nuestra BBDD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Idiomas"
+                ],
+                "summary": "Eliminar un idioma",
+                "description": "Permite eliminar un idioma. Solo accesible para administradores y superadministradores.",
+                "operationId": "1aea638ff9bd9fff32197ac01e5e625b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del idioma a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Idioma borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Idioma borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar un idioma"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Idioma no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Idioma no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Login"
+                ],
+                "summary": "Login de usuario",
+                "operationId": "b738aa16b062f9a89c3adc5aa4ad9b56",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@ebis.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token generado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciales incorrectas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Credenciales incorrectas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/lugares": {
+            "get": {
+                "tags": [
+                    "Lugares"
+                ],
+                "summary": "Listar todos los lugares",
+                "description": "Obtiene la lista de todos los lugares disponibles. Accesible tanto para usuarios registrados como no registrados",
+                "operationId": "bbdab076cad171758916df3ae1190c5b",
+                "responses": {
+                    "200": {
+                        "description": "Lista de lugares obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Lugar"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lugares"
+                ],
+                "summary": "Crear un nuevo lugar",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir un nuevo lugar a la Base de Datos.",
+                "operationId": "5589e9da706ddca3bb68cd209d44e6c9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LugarDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Lugar creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado. Solo administradores pueden crear lugares.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores pueden guardar un nuevo lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validación fallida",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/lugares/{id}": {
+            "get": {
+                "tags": [
+                    "Lugares"
+                ],
+                "summary": "Mostrar un lugar específico (por id)",
+                "description": "Obtiene los detalles de un lugar por su ID. Accesible tanto para usuarios registrados como no registrados",
+                "operationId": "41225175e336077bdf12c9f169966652",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del lugar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lugar encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Lugares"
+                ],
+                "summary": "Actualizar un lugar",
+                "description": "Permite modificar los datos de un lugar. Solo accesible para administradores y superadministradores.",
+                "operationId": "a8f1a533c5c338c4da3736967d97f1b7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del lugar a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LugarDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lugar actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede editar un lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ya existe un lugar con ese nombre en nuestra BBDD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Lugares"
+                ],
+                "summary": "Eliminar un lugar",
+                "description": "Permite eliminar un lugar. Solo accesible para administradores y superadministradores.",
+                "operationId": "8c57d742ad28f86eb43a24f8314a2ce3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del lugar a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lugar borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lugar borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar un lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/marcaCoches": {
+            "get": {
+                "tags": [
+                    "MarcasCoche"
+                ],
+                "summary": "Listar todas las marcas de coche",
+                "description": "Obtiene la lista de todas las marcas de coche disponibles. Solo accesible para usuarios registrados",
+                "operationId": "getMarcasCoche",
+                "responses": {
+                    "200": {
+                        "description": "Lista de marcas de coche obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MarcaCoche"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "MarcasCoche"
+                ],
+                "summary": "Crear una nueva marca de coche",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir una nueva marca de coches a la Base de Datos.",
+                "operationId": "storeMarcaCoche",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarcaCocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Marca de coche creada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MarcaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/marcaCoches/{id}": {
+            "get": {
+                "tags": [
+                    "MarcasCoche"
+                ],
+                "summary": "Mostrar una marca de coche específica (por id)",
+                "description": "Obtiene los detalles de la marca de un coche por su ID. Solo accesible para usuarios registrados",
+                "operationId": "getMarcaCocheById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la marca de coche",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marca de coche encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MarcaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Marca de coche no encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "MarcasCoche"
+                ],
+                "summary": "Actualizar una marca de coche",
+                "description": "Permite modificar los datos de una marca de coches. Solo accesible para administradores y superadministradores.",
+                "operationId": "updateMarcaCoche",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la marca de coche a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarcaCocheDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Marca de coche actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MarcaCoche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "404": {
+                        "description": "Marca de coche no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "MarcasCoche"
+                ],
+                "summary": "Eliminar una marca de coche",
+                "description": "Permite eliminar una marca de coches. Solo accesible para administradores y superadministradores.",
+                "operationId": "deleteMarcaCoche",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la marca de coche a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marca de coche borrada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Marca de coches borrada correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar una marca de coches"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Marca de coche no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Marca de coches no encontrada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/paises": {
+            "get": {
+                "tags": [
+                    "Países"
+                ],
+                "summary": "Listar todos los países",
+                "description": "Obtiene la lista de todos los paises disponibles. Accesible tanto para usuarios registrados como no registrados",
+                "operationId": "a714e128ee0fec14562fd0e54ca6e31f",
+                "responses": {
+                    "200": {
+                        "description": "Lista de países",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pais"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Países"
+                ],
+                "summary": "Crear un nuevo país",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir un nuevo país a la Base de Datos.",
+                "operationId": "storePais",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaisDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "País creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Pais"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado: solo administradores"
+                    },
+                    "422": {
+                        "description": "Error de validación en los datos enviados"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/paises/{id}": {
+            "get": {
+                "tags": [
+                    "Países"
+                ],
+                "summary": "Mostrar un país específico (por id)",
+                "description": "Obtiene los detalles de un país por su ID. Accesible tanto para usuarios registrados como no registrados",
+                "operationId": "showPais",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del país",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "País encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Pais"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "País no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "País no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Países"
+                ],
+                "summary": "Actualizar un país",
+                "description": "Permite modificar los datos de un país. Solo accesible para administradores y superadministradores.",
+                "operationId": "updatePais",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del país a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaisDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "País actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Pais"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede editar un país"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "País no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "País no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El campo nombre ya existe."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Países"
+                ],
+                "summary": "Eliminar un país",
+                "description": "Permite eliminar un país. Solo accesible para administradores y superadministradores.",
+                "operationId": "destroyPais",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del país a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "País borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "País borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar un país"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "País no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "País no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/tipoLugares": {
+            "get": {
+                "tags": [
+                    "TipoLugares"
+                ],
+                "summary": "Listar todos los tipos de lugares",
+                "description": "Obtiene la lista de todos los tipos de lugares disponibles. Solo accesible para usuarios registrados",
+                "operationId": "d2df426e63216ec00b0768e98e834153",
+                "responses": {
+                    "200": {
+                        "description": "Lista de tipos de lugares obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/TipoLugar"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "TipoLugares"
+                ],
+                "summary": "Crear un nuevo tipo de lugar",
+                "description": "Solo accesible para administradores y superadministradores. Permite crear y añadir un nuevo tipo de lugar a la Base de Datos.",
+                "operationId": "49d581769f1878d8ca6e7e687a67d448",
+                "requestBody": {
+                    "description": "Datos para crear un tipo de lugar",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TipoLugarDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tipo de lugar creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/TipoLugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores pueden guardar un nuevo tipo de lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The nombre has already been taken."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/tipoLugares/{id}": {
+            "get": {
+                "tags": [
+                    "TipoLugares"
+                ],
+                "summary": "Mostrar un tipo de lugar específico (por id)",
+                "description": "Obtiene los detalles de un tipo de lugar por su ID. Solo accesible para usuarios registrados",
+                "operationId": "9b32c2fec6d9b829527a47a6b40c1d2b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del tipo de lugar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tipo de lugar encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/TipoLugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tipo de lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipo de lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "TipoLugares"
+                ],
+                "summary": "Actualizar un tipo de lugar",
+                "description": "Permite modificar los datos de un tipo de lugar. Solo accesible para administradores y superadministradores.",
+                "operationId": "f6e8675e07a517ec15a9d21b871b0e5d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del tipo de lugar a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TipoLugarDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tipo de lugar actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/TipoLugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede editar un tipo e lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tipo de lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipo de lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ya existe un tipo de lugar con ese nombre en nuestra BBDD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "TipoLugares"
+                ],
+                "summary": "Eliminar un tipo de lugar",
+                "description": "Permite eliminar un tipo de lugar. Solo accesible para administradores y superadministradores.",
+                "operationId": "ff335a2f72e3daee3ea6724f83cb5e0e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del tipo de lugar a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tipo de lugar borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipo de lugar borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador puede borrar un tipo de lugar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tipo de lugar no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipo de lugar no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Listar todos los usuarios",
+                "description": "Obtiene la lista de todas usuarios disponibles. Solo accesible para administradores y superadministradores",
+                "operationId": "d64c69c227bcaa94189f8552f9336c55",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuarios",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores pueden ver todos los usuarios"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Crear un nuevo usuario",
+                "description": "Accesible tanto para usuarios registrados como como no registrados. Permite crear y añadir un nuevo usuario a la Base de Datos. Solo se le permite al superadministrador asignar un rol de admin a un nuevo usuario.",
+                "operationId": "storeUser",
+                "requestBody": {
+                    "description": "Datos para crear un usuario",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserDB"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario creado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado para crear usuarios con rol admin o superadmin",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el superadministrador puede crear otro  usuario con el rol de administrador"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Mostrar información de un usuario específico (por id)",
+                "description": "Obtiene los detalles de un usuario por su ID. Solo accesible para administradores, superadministradores y el propio usuario registrado.",
+                "operationId": "30f5707ec8261e10e2b930047fcb2f15",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el administrador o el propio cliente puede ver los datos de un usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Actualiza los datos de un usuario",
+                "description": "Permite modificar los datos de un usuario. Solo el superadministrador puede modificar roles.\n     *                  Los permisos dependen del rol del usuario a modificar:\n     *                      - cliente: admin, superadmin o propio usuario\n     *                      - admin: superadmin o propio admin\n     *                      - superadmin: solo el propio superadmin",
+                "operationId": "updateUsuario",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario a modificar",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Datos para actualizar el usuario",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del usuario",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Juan Perez"
+                                    },
+                                    "email": {
+                                        "description": "Correo electrónico único",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@ebis.com"
+                                    },
+                                    "password": {
+                                        "description": "Contraseña",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "secret"
+                                    },
+                                    "telefono": {
+                                        "description": "Teléfono (9 dígitos)",
+                                        "type": "string",
+                                        "pattern": "^\\d{9}$",
+                                        "example": "698457218"
+                                    },
+                                    "dni": {
+                                        "description": "DNI válido",
+                                        "type": "string",
+                                        "pattern": "^\\d{8}[A-HJ-NP-TV-Z]$",
+                                        "example": "45728152T"
+                                    },
+                                    "rol": {
+                                        "description": "Rol del usuario (solo superadmin puede modificar)",
+                                        "type": "string",
+                                        "enum": [
+                                            "superadmin",
+                                            "admin",
+                                            "cliente"
+                                        ],
+                                        "example": "cliente"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permiso denegado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo el superadministrador puede modificar el rol"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El correo electrónico no tiene un formato válido."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Eliminar un usuario",
+                "description": "Permite eliminar un usuario registrado. Solo accesible para superadministradores, administradores (si el usuario a eliminar tiene el rol de cliente o es él mismo) y el propio usuario.",
+                "operationId": "fae2f13f7866482992f1b2f6f19bfac2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario borrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario borrado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado para eliminar este usuario",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solo los administradores o el propio usuario pueden eliminar un cliente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Alquiler": {
+                "title": "Alquiler (Recurso API)",
+                "description": "Datos detallados de un alquiler",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "coche": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "marca": {
+                                "type": "string",
+                                "example": "Toyota"
+                            },
+                            "carroceria": {
+                                "type": "string",
+                                "example": "SUV"
+                            },
+                            "ano": {
+                                "type": "integer",
+                                "example": 2022
+                            },
+                            "nPlazas": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "cambio": {
+                                "type": "string",
+                                "example": "Automático"
+                            },
+                            "estado": {
+                                "type": "string",
+                                "example": "Disponible"
+                            },
+                            "costeDia": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 45.99
+                            },
+                            "pais": {
+                                "type": "string",
+                                "example": "España"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "cliente": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "nombre": {
+                                "type": "string",
+                                "example": "José"
+                            }
+                        },
+                        "type": "string"
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-08-30"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-05"
+                    },
+                    "coste": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 229.95
+                    }
+                },
+                "type": "object"
+            },
+            "CarroceriaCoche": {
+                "title": "Carrocería de Coche (Recurso API)",
+                "description": "Recurso de carrocería de un coche (respuesta)",
+                "required": [
+                    "id",
+                    "nombre"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID de la carrocería del coche",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "description": "Nombre de la carrocería del coche",
+                        "type": "string",
+                        "example": "SUV"
+                    }
+                },
+                "type": "object"
+            },
+            "Coche": {
+                "title": "Coche (Rescurso API)",
+                "description": "Representación de un coche con detalles de marca, carrocería, país y alquileres",
+                "properties": {
+                    "id": {
+                        "description": "ID único del coche",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "marca": {
+                        "description": "Nombre de la marca del coche",
+                        "type": "string",
+                        "example": "Toyota"
+                    },
+                    "carroceria": {
+                        "description": "Tipo de carrocería",
+                        "type": "string",
+                        "example": "Sedán"
+                    },
+                    "ano": {
+                        "description": "Año del coche",
+                        "type": "integer",
+                        "example": 2020
+                    },
+                    "nPlazas": {
+                        "description": "Número de plazas",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "cambio": {
+                        "description": "Tipo de cambio de marchas",
+                        "type": "string",
+                        "example": "Manual"
+                    },
+                    "estado": {
+                        "description": "Estado del coche",
+                        "type": "string",
+                        "example": "Disponible"
+                    },
+                    "costeDia": {
+                        "description": "Coste por día de alquiler",
+                        "type": "number",
+                        "format": "float",
+                        "example": 35.5
+                    },
+                    "pais": {
+                        "description": "Nombre del país asociado",
+                        "type": "string",
+                        "example": "España"
+                    },
+                    "alquileres": {
+                        "description": "Fechas de alquiler",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "2023-07-01 - 2023-07-10"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Idioma": {
+                "title": "Idioma (Recurso API)",
+                "properties": {
+                    "id": {
+                        "description": "ID del idioma",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "iso_639_1": {
+                        "description": "Código ISO 639-1 del idioma",
+                        "type": "string",
+                        "example": "es"
+                    },
+                    "nombre": {
+                        "description": "Nombre del idioma",
+                        "type": "string",
+                        "example": "Español"
+                    }
+                },
+                "type": "object"
+            },
+            "Lugar": {
+                "title": "Lugar (Recurso API)",
+                "description": "Respuesta de la API para un lugar turístico",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Cataratas del Iguazú"
+                    },
+                    "pais": {
+                        "type": "string",
+                        "example": "Argentina"
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "example": "Impresionante sistema de cascadas en la frontera de Argentina y Brasil.",
+                        "nullable": true
+                    },
+                    "imagen_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/iguazu.jpg",
+                        "nullable": true
+                    },
+                    "web_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://turismo.argentina.gob.ar/iguazu",
+                        "nullable": true
+                    },
+                    "tipoLugares": {
+                        "description": "Tipos de lugar (ej: playa, montaña, parque natural...)",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "Parque natural"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MarcaCoche": {
+                "title": "Marcas de Coche (Recurso API)",
+                "required": [
+                    "id",
+                    "nombre"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID único de la marca del coche",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "description": "Nombre de la marca del coche",
+                        "type": "string",
+                        "example": "Toyota"
+                    }
+                },
+                "type": "object"
+            },
+            "Pais": {
+                "title": "Pais (Recurso API)",
+                "description": "Respuesta de la API para un país, con relaciones y campos amigables",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Argentina"
+                    },
+                    "bandera_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/bandera.png",
+                        "nullable": true
+                    },
+                    "capital": {
+                        "type": "string",
+                        "example": "Buenos Aires"
+                    },
+                    "continente": {
+                        "type": "string",
+                        "example": "América del Sur"
+                    },
+                    "conduccion": {
+                        "type": "string",
+                        "enum": [
+                            "izquierda",
+                            "derecha"
+                        ],
+                        "example": "izquierda",
+                        "nullable": true
+                    },
+                    "idiomas": {
+                        "description": "Idiomas hablados en el país",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "Español"
+                        }
+                    },
+                    "lugares": {
+                        "description": "Lugares turísticos del país",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "Cataratas del Iguazú"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TipoLugar": {
+                "title": "Tipo de Lugar (Recurso API)",
+                "description": "Recurso que representa un tipo de lugar (por ejemplo, playa, montaña, museo, etc.)",
+                "properties": {
+                    "id": {
+                        "description": "ID único del tipo de lugar",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "description": "Nombre del tipo de lugar",
+                        "type": "string",
+                        "example": "Playa"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "title": "User (Recurso API)",
+                "description": "Información del usuario cliente",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan@ebis.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "123456789"
+                    },
+                    "dni": {
+                        "type": "string",
+                        "example": "12345678X"
+                    },
+                    "rol": {
+                        "type": "string",
+                        "example": "cliente"
+                    }
+                },
+                "type": "object"
+            },
+            "AlquilerDB": {
+                "title": "Alquiler (BBDD)",
+                "required": [
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "coste",
+                    "coche_id",
+                    "cliente_id"
+                ],
+                "properties": {
+                    "fecha_inicio": {
+                        "description": "*Fecha de inicio del alquiler (YYYY-MM-DD)*",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-08-21"
+                    },
+                    "fecha_fin": {
+                        "description": "*Fecha de fin del alquiler (YYYY-MM-DD)*",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-08-28"
+                    },
+                    "coche_id": {
+                        "description": "*ID del coche asociado al alquiler*",
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "cliente_id": {
+                        "description": "*ID del cliente que realizó el alquiler*",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "coste": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 250.5
+                    }
+                },
+                "type": "object"
+            },
+            "CarroceriaCocheDB": {
+                "title": "Carrocería de Coche (BBDD)",
+                "description": "Esquema para crear o actualizar una carrocería de coche (entrada)",
+                "required": [
+                    "nombre"
+                ],
+                "properties": {
+                    "nombre": {
+                        "description": "Nombre de la carrocería",
+                        "type": "string",
+                        "example": "Hatchback"
+                    }
+                },
+                "type": "object"
+            },
+            "CocheDB": {
+                "title": "Coche (BBDD)",
+                "description": "Modelo que representa un coche con sus relaciones",
+                "required": [
+                    "marca_id",
+                    "carroceria_id",
+                    "pais_id",
+                    "ano",
+                    "nPlazas",
+                    "cambio",
+                    "estado",
+                    "costeDia"
+                ],
+                "properties": {
+                    "marca_id": {
+                        "description": "ID de la marca asociada al coche",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "carroceria_id": {
+                        "description": "ID del tipo de carrocería",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "pais_id": {
+                        "description": "ID del país al que pertenece el coche",
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "ano": {
+                        "description": "Año del coche",
+                        "type": "integer",
+                        "example": 2020
+                    },
+                    "nPlazas": {
+                        "description": "Número de plazas del coche",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "cambio": {
+                        "description": "Tipo de cambio del coche (manual o automático)",
+                        "type": "string",
+                        "example": "manual"
+                    },
+                    "estado": {
+                        "description": "Estado actual del coche (disponible/mantenimiento)",
+                        "type": "string",
+                        "example": "disponible"
+                    },
+                    "costeDia": {
+                        "description": "Coste por día del alquiler del coche",
+                        "type": "number",
+                        "format": "float",
+                        "example": 35.5
+                    }
+                },
+                "type": "object"
+            },
+            "ContinenteDB": {
+                "title": "Continente (BBDD)",
+                "description": "Modelo Continente que representa un continente",
+                "properties": {
+                    "nombre": {
+                        "description": "Nombre del continente",
+                        "type": "string",
+                        "example": "América del Sur"
+                    }
+                },
+                "type": "object"
+            },
+            "IdiomaDB": {
+                "title": "Idioma (BBDD)",
+                "required": [
+                    "nombre",
+                    "iso_639_1"
+                ],
+                "properties": {
+                    "nombre": {
+                        "description": "Nombre del idioma",
+                        "type": "string",
+                        "example": "Catalán"
+                    },
+                    "iso_639_1": {
+                        "description": "Código ISO 639-1 del idioma",
+                        "type": "string",
+                        "example": "ca"
+                    }
+                },
+                "type": "object"
+            },
+            "LugarDB": {
+                "title": "Lugar (BBDD)",
+                "description": "Esquema de entrada/salida basado en la tabla 'lugares'",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Cataratas del Iguazú"
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "example": "Cascadas en la selva tropical de Misiones.",
+                        "nullable": true
+                    },
+                    "imagen_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/cataratas.jpg",
+                        "nullable": true
+                    },
+                    "web_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://turismo.argentina.gob.ar/iguazu",
+                        "nullable": true
+                    },
+                    "localizacion_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://goo.gl/maps/iguazu",
+                        "nullable": true
+                    },
+                    "pais_id": {
+                        "description": "ID del país al que pertenece el lugar",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tipoLugares": {
+                        "description": "IDs de los tipos de lugar relacionados",
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MarcaCocheDB": {
+                "title": "Marca de Coche (BBDD)",
+                "required": [
+                    "nombre"
+                ],
+                "properties": {
+                    "nombre": {
+                        "description": "Nombre de la marca del coche",
+                        "type": "string",
+                        "example": "Seat"
+                    }
+                },
+                "type": "object"
+            },
+            "PaisDB": {
+                "title": "Pais (BBDD)",
+                "description": "Esquema basado en la tabla de base de datos paises",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Argentina"
+                    },
+                    "continente_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "capital": {
+                        "type": "string",
+                        "example": "Buenos Aires"
+                    },
+                    "bandera_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/bandera.png",
+                        "nullable": true
+                    },
+                    "conduccion": {
+                        "type": "string",
+                        "enum": [
+                            "izquierda",
+                            "derecha"
+                        ],
+                        "example": "izquierda",
+                        "nullable": true
+                    },
+                    "idiomas": {
+                        "description": "IDs de los idiomas del país",
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TipoLugarDB": {
+                "title": "Tipo de Lugar (BBDD)",
+                "description": "Esquema del tipo de lugar tal y como está almacenado en la base de datos",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Alta montaña"
+                    }
+                },
+                "type": "object"
+            },
+            "UserDB": {
+                "title": "User (BBDD)",
+                "description": "Modelo de usuario",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan@ebis.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "123456789"
+                    },
+                    "dni": {
+                        "type": "string",
+                        "example": "12345678X"
+                    },
+                    "password": {
+                        "type": "password",
+                        "example": ""
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Alquileres",
+            "description": "Alquileres"
+        },
+        {
+            "name": "Carrocerías de Coche",
+            "description": "Carrocerías de Coche"
+        },
+        {
+            "name": "Coches",
+            "description": "Coches"
+        },
+        {
+            "name": "Idiomas",
+            "description": "Idiomas"
+        },
+        {
+            "name": "Login",
+            "description": "Login"
+        },
+        {
+            "name": "Lugares",
+            "description": "Lugares"
+        },
+        {
+            "name": "MarcasCoche",
+            "description": "MarcasCoche"
+        },
+        {
+            "name": "Países",
+            "description": "Países"
+        },
+        {
+            "name": "TipoLugares",
+            "description": "TipoLugares"
+        },
+        {
+            "name": "Usuarios",
+            "description": "Usuarios"
+        }
+    ]
+}
